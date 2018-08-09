@@ -1,0 +1,6 @@
+.vs
+.vscode
+build
+node_modules
+
+db.csv
