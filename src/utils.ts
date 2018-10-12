@@ -7,6 +7,10 @@ function createNotification(title, body) {
 
 export function notify(title: string, body?: string) {
     createNotification(title, body);
+    const sound = new Audio(
+        'https://notificationsounds.com/soundfiles/8eefcfdf5990e441f0fb6f3fad709e21/file-sounds-1100-open-ended.mp3'
+    );
+    sound.play();
     log(title);
     if (body) {
         log(body);

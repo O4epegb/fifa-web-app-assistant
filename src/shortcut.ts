@@ -4,7 +4,7 @@ import { debounce } from 'lodash';
 export function registerShortcut(shortcutName, cb = x => x) {
     let counter = 0;
     return new Promise((resolve, reject) => {
-        const ret = globalShortcut.register(
+        globalShortcut.register(
             shortcutName,
             debounce(() => {
                 console.log(
@@ -16,19 +16,12 @@ export function registerShortcut(shortcutName, cb = x => x) {
                 cb(counter);
             }, 50)
         );
-        if (!ret) {
-            console.log(
-                `ERROR: Shortcut "${shortcutName}" registration failed`
-            );
-            reject();
-        } else {
-            console.log(
-                `SUCCESS: Shortcut "${shortcutName}" is registered = ${globalShortcut.isRegistered(
-                    shortcutName
-                )}`
-            );
-            resolve();
-        }
+        console.log(
+            `SUCCESS: Shortcut "${shortcutName}" is registered = ${globalShortcut.isRegistered(
+                shortcutName
+            )}`
+        );
+        resolve();
     }).catch(() => {
         console.log(`ERROR: Shortcut "${shortcutName}" registration failed`);
     });
