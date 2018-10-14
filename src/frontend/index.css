@@ -1,0 +1,51 @@
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: Helvetica;
+}
+
+#root {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.main {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.controls {
+    background-color: #eee;
+    padding: 10px;
+}
+
+.content {
+    overflow-y: auto;
+}
+
+.player-info {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.player-name {
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.player-price {
+    font-size: 24px;
+    text-align: center;
+}

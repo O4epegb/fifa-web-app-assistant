@@ -17,7 +17,7 @@ export function notify(title: string, body?: string) {
     }
 }
 
-export function log(...args: Array<any>) {
+export function log<T>(...args: Array<T>) {
     console.log(...args);
 }
 
@@ -46,9 +46,7 @@ export function moveMouse({ x, y }: Coord) {
 }
 
 export function typeString(str: string) {
-    const string = `${(str as any)
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')}`;
+    const string = `${str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')}`;
     robot.typeString(string);
     // robot.typeStringDelayed(string, 8000);
 }

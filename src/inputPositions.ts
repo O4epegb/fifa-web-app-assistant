@@ -70,10 +70,9 @@ export const inputs = {
     backButton: {
         x: 137,
         y: 160
+    },
+    increaseMinBid: {
+        x: 1301,
+        y: 1047
     }
-    // searchNotFound: {
-    //     x: 653,
-    //     y: 744,
-    //     color: '5c4f07'
-    // }
 };

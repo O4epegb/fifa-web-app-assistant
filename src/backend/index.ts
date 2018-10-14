@@ -15,7 +15,7 @@ function onAppStart() {
         width: 1200,
         height: 800,
         center: true,
-        title: 'Electron Notification Example'
+        title: 'Fifa Trading Assistant'
     });
     mainWindow.webContents.openDevTools();
     mainWindow.on('closed', () => {

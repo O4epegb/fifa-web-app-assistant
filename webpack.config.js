@@ -1,5 +1,4 @@
 const path = require('path');
-const webpack = require('webpack');
 const createElectronReloadWebpackPlugin = require('electron-reload-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -49,6 +48,31 @@ const frontendConfig = {
             {
                 test: /\.node$/,
                 use: [{ loader: 'node-loader' }]
+            },
+            {
+                test: /\.css$/,
+                use: [
+                    {
+                        loader: 'style-loader'
+                    },
+                    {
+                        loader: 'css-loader',
+                        options: {
+                            minimize: true
+                        }
+                    },
+                    {
+                        loader: 'postcss-loader',
+                        ident: 'postcss',
+                        options: {
+                            plugins: loader => [
+                                require('precss'),
+                                require('postcss-hexrgba')
+                            ],
+                            sourceMap: true
+                        }
+                    }
+                ]
             }
         ]
     },
@@ -70,7 +94,10 @@ const backendConfig = {
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.jsx']
     },
-    plugins: [new ForkTsCheckerWebpackPlugin(), useElectronConnect && ElectronReloadWebpackPlugin()].filter(Boolean),
+    plugins: [
+        new ForkTsCheckerWebpackPlugin(),
+        useElectronConnect && ElectronReloadWebpackPlugin()
+    ].filter(Boolean),
     module: {
         rules: [
             {

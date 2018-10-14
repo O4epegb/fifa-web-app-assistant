@@ -3,6 +3,7 @@
         "noUnusedLocals": true,
         "noImplicitThis": true,
         "noImplicitUseStrict": true,
+        "experimentalDecorators": true,
         "target": "es5",
         "jsx": "react",
         "module": "commonjs",

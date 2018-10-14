@@ -1,55 +1,16 @@
 import * as React from 'react';
+import { observer } from 'mobx-react';
 import { ipcRenderer } from 'electron';
 import * as u from '../utils';
 import { shortcutNames, microDelay } from '../constants';
 import { inputs } from '../inputPositions';
-import { getPlayers, savePlayers } from '../players';
-import { Player, PlayerType, Coord } from '../models';
-import { reloadFutbinData } from '../services';
+import { Coord } from '../models';
+import { store } from './store';
 
-interface State {
-    allPlayers: Array<Player>;
-    players: Array<Player>;
-    priceIncrease: number;
-    currentPlayerIndex: number;
-    priceMultiplier: number;
-    priceDecrease: number;
-    shouldAutoSearch: boolean;
-    priceFrom: number;
-    priceTo: number;
-    maxPrice: number;
-    futbinPagesToLoad: number;
-    headerHeight: number;
-    activePlayerType: PlayerType;
-}
-
-export class App extends React.Component<{}, State> {
-    headerNode: HTMLDivElement;
-
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            allPlayers: [],
-            players: [],
-            priceIncrease: 0,
-            currentPlayerIndex: 0,
-            priceMultiplier: 0.9,
-            priceDecrease: 1500,
-            shouldAutoSearch: false,
-            priceFrom: 0,
-            priceTo: 50000,
-            maxPrice: 200000,
-            futbinPagesToLoad: 10,
-            headerHeight: 0,
-            activePlayerType: PlayerType.Gold
-        };
-    }
-
+@observer
+export class App extends React.Component<{}, {}> {
     componentDidMount() {
-        this.reloadPlayersFromDb();
-
-        this.setState({ headerHeight: this.headerNode.clientHeight });
+        store.reloadPlayersFromDb();
 
         ipcRenderer.on('shortcut-press', (event, shortcutName) => {
             switch (shortcutName) {
@@ -86,132 +47,11 @@ export class App extends React.Component<{}, State> {
         });
     }
 
-    changePlayerName = (
-        event: React.FocusEvent<HTMLInputElement>,
-        changedPlayer: Player
-    ) => {
-        changedPlayer.name = (event.target as any).value;
-        this.setState({ players: this.state.players });
-    };
-
-    changePlayerPrice = (
-        event: React.FocusEvent<HTMLInputElement>,
-        changedPlayer: Player
-    ) => {
-        changedPlayer.price = (event.target as any).value;
-        this.setState({ players: this.state.players });
-    };
-
-    changePlayerRating = (
-        event: React.FocusEvent<HTMLInputElement>,
-        changedPlayer: Player
-    ) => {
-        changedPlayer.rating = (event.target as any).value;
-        this.setState({ players: this.state.players });
-    };
-
-    changePlayerType = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        this.setState(
-            { activePlayerType: event.target.value as PlayerType },
-            () => {
-                this.reloadPlayersFromDb();
-            }
-        );
-    };
-
-    savePlayers = () => {
-        const players = this.state.allPlayers
-            .slice()
-            .sort((a, b) => Number(a.price) - Number(b.price));
-        savePlayers(players)
-            .then(() => {
-                u.log('Players saved successfully');
-            })
-            .catch(err => {
-                u.log('Failed to save players', err);
-            });
-    };
-
-    reloadPlayersFromDb = () => {
-        getPlayers().then(players => {
-            console.log('Players reloaded from db');
-            console.log(players);
-            this.setState(({ activePlayerType }) => {
-                return {
-                    allPlayers: players,
-                    players: players.filter(player => {
-                        const price = Number(player.price);
-                        // const rating = Number(player.rating);
-                        return (
-                            // rating <= 84 &&
-                            price <= this.state.priceTo &&
-                            price >= this.state.priceFrom &&
-                            player.type === activePlayerType
-                        );
-                    })
-                };
-            });
-        });
-    };
-
-    reloadFromFutbin = () => {
-        reloadFutbinData(
-            this.state.futbinPagesToLoad,
-            this.state.activePlayerType
-        ).then(() => {
-            this.reloadPlayersFromDb();
-        });
-    };
-
-    randomizePlayers = () => {
-        this.setState({
-            players: u.randomSort(this.state.players),
-            currentPlayerIndex: 0
-        });
-    };
-
-    changeActiveIndex = (index: number) => {
-        this.setState({ currentPlayerIndex: index });
-    };
-
-    changeFilterFrom = (event: React.FocusEvent<HTMLInputElement>) => {
-        const newPriceFrom = Number((event.target as any).value);
-        this.setState({ priceFrom: newPriceFrom }, () => {
-            this.reloadPlayersFromDb();
-        });
-    };
-
-    changeFilterTo = (event: React.FocusEvent<HTMLInputElement>) => {
-        const newPriceTo = Number((event.target as any).value);
-        this.setState({ priceTo: newPriceTo }, () => {
-            this.reloadPlayersFromDb();
-        });
-    };
-
-    changeFutbinPages = (event: React.FocusEvent<HTMLInputElement>) => {
-        const futbinPagesToLoad = Number((event.target as any).value);
-        this.setState({ futbinPagesToLoad });
-    };
-
-    changePriceMultiplier = (event: React.FocusEvent<HTMLInputElement>) => {
-        const newMultiplier = Number((event.target as any).value);
-        this.setState({ priceMultiplier: newMultiplier });
-    };
-
-    changePriceDecrease = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newDecrease = Number(event.target.value);
-        this.setState({ priceDecrease: newDecrease });
-    };
-
-    changeMaxPrice = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const newMaxPrice = Number(event.target.value);
-        this.setState({ maxPrice: newMaxPrice });
-    };
-
     toggleAutoSearch = () => {
-        const autoSearchState = !this.state.shouldAutoSearch;
-        this.setState({ shouldAutoSearch: autoSearchState });
-        u.notify(`AutoSearch toggled to ${autoSearchState.toString()}`);
+        store.setValue('isAutoSearchActive', !store.isAutoSearchActive);
+        u.notify(
+            `AutoSearch toggled to ${store.isAutoSearchActive.toString()}`
+        );
     };
 
     checkPlayerFound = () => {
@@ -239,7 +79,6 @@ export class App extends React.Component<{}, State> {
     };
 
     getPlayerSearchItem(n: number): Coord {
-        console.log(n, 'ssss');
         return {
             1: inputs.playerSearchItem1,
             2: inputs.playerSearchItem2,
@@ -261,37 +100,23 @@ export class App extends React.Component<{}, State> {
     };
 
     searchHandler = async () => {
-        const { players, priceIncrease, maxPrice } = this.state;
-        let { currentPlayerIndex } = this.state;
-
-        if (players.length === 0) {
+        if (store.players.length === 0) {
             u.log('No players in DB');
             return;
         }
 
-        if (currentPlayerIndex >= players.length) {
-            // players = u.randomSort(players);
-            currentPlayerIndex = 0;
-            this.setState({
-                currentPlayerIndex: 0,
-                players,
-                priceIncrease: priceIncrease + 1
-            });
-        }
-        const currentPlayer = players[currentPlayerIndex];
-        this.setState({
-            currentPlayerIndex: currentPlayerIndex + 1
-        });
+        const nextIndex = store.currentPlayerIndex + 1;
 
-        const numericPrice = Number(currentPlayer.price);
-        const priceWithDiscount = numericPrice * this.state.priceMultiplier;
-        const discount = numericPrice - priceWithDiscount;
-        const actualDiscount = discount < 1000 ? numericPrice / 2 : discount;
-        const price = numericPrice - actualDiscount;
-        const finalPrice = Number(Math.min(maxPrice, price).toFixed(0));
-        const priceString = String(
-            finalPrice + this.getPriceIncreaseNumber(priceIncrease, finalPrice)
-        );
+        if (nextIndex >= store.players.length) {
+            store.setValue('currentPlayerIndex', 0);
+            u.moveAndClick(inputs.increaseMinBid);
+            await u.delay(microDelay);
+        } else {
+            store.setValue('currentPlayerIndex', nextIndex);
+        }
+
+        const currentPlayer = store.activePlayer;
+        const priceString = store.activePlayerPrice;
 
         console.log(
             `Checking player "${
@@ -314,10 +139,10 @@ export class App extends React.Component<{}, State> {
                 inputs.playerNotFoundIcon
             );
             if (playerNotFoundIconColor === inputs.playerNotFoundIcon.color) {
-                if (this.state.shouldAutoSearch) {
+                if (store.isAutoSearchActive) {
                     setTimeout(() => {
-                        if (this.state.shouldAutoSearch) {
-                            this.searchHandler();
+                        if (store.isAutoSearchActive) {
+                            this.startSearchAgain();
                         }
                     }, 100);
                     throw Error(
@@ -352,8 +177,8 @@ export class App extends React.Component<{}, State> {
                     inputs.searchButton.color,
                     inputs.searchButton
                 );
-                if (this.state.shouldAutoSearch) {
-                    this.searchHandler();
+                if (store.isAutoSearchActive) {
+                    this.startSearchAgain();
                 }
             }
         } catch (error) {
@@ -361,43 +186,43 @@ export class App extends React.Component<{}, State> {
         }
     };
 
+    startSearchAgain = () => {
+        // store.setValue('currentPlayerIndex', store.currentPlayerIndex + 1);
+        this.searchHandler();
+    };
+
     render() {
-        const { shouldAutoSearch } = this.state;
+        if (store.isAutoSearchActive) {
+            return (
+                <div className="player-info">
+                    <h1 className="player-name">{store.activePlayer.name}</h1>
+                    <div className="player-price">
+                        {store.activePlayer.price.toLocaleString()}
+                    </div>
+                    <div className="player-price">
+                        {Number(store.activePlayerPrice).toLocaleString()}
+                    </div>
+                </div>
+            );
+        }
 
         return (
-            <div>
-                <div
-                    ref={node => (this.headerNode = node)}
-                    style={{
-                        position: 'fixed',
-                        background: '#eeeeee',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        padding: '10px'
-                    }}
-                >
-                    <button type="button" onClick={this.savePlayers}>
-                        Save
-                    </button>
-                    <button type="button" onClick={this.reloadPlayersFromDb}>
-                        Reload from DB
-                    </button>
-                    <button type="button" onClick={this.randomizePlayers}>
-                        Randomize
-                    </button>
-                    <button type="button" onClick={this.toggleAutoSearch}>
-                        AutoSearch is {shouldAutoSearch ? 'on' : 'off'}
-                    </button>
-                    <div style={{ margin: '20px 0' }}>
-                        <button type="button" onClick={this.reloadFromFutbin}>
+            <div className="main">
+                <div className="controls">
+                    <div>
+                        <button type="button" onClick={store.reloadData}>
                             Reload from futbin
                         </button>
                         <input
                             type="text"
                             placeholder="Futbin pages to load"
-                            defaultValue={String(this.state.futbinPagesToLoad)}
-                            onBlur={event => this.changeFutbinPages(event)}
+                            value={store.totalPagesToLoad}
+                            onChange={event =>
+                                store.setValue(
+                                    'totalPagesToLoad',
+                                    Number(event.target.value) || 0
+                                )
+                            }
                         />
                     </div>
                     <div style={{ marginTop: '20px' }}>
@@ -405,63 +230,65 @@ export class App extends React.Component<{}, State> {
                         <input
                             type="text"
                             placeholder="price from"
-                            defaultValue={String(this.state.priceFrom)}
-                            onBlur={event => this.changeFilterFrom(event)}
+                            value={store.priceFrom}
+                            onChange={event =>
+                                store.setValue(
+                                    'priceFrom',
+                                    Number(event.target.value) || 0
+                                )
+                            }
                         />
                         <input
                             type="text"
                             placeholder="price to"
-                            defaultValue={String(this.state.priceTo)}
-                            onBlur={event => this.changeFilterTo(event)}
+                            value={store.priceTo}
+                            onChange={event =>
+                                store.setValue(
+                                    'priceTo',
+                                    Number(event.target.value) || 0
+                                )
+                            }
                         />
-                        <div>Player type</div>
-                        <select
-                            onChange={this.changePlayerType}
-                            defaultValue={this.state.activePlayerType}
-                        >
-                            {[PlayerType.Gold, PlayerType.Icon].map(item => {
-                                return (
-                                    <option key={item} value={item}>
-                                        {item}
-                                    </option>
-                                );
-                            })}
-                        </select>
-                        <div>Price multiplier</div>
+                        <div>Price multiplier, %</div>
                         <input
                             type="text"
                             placeholder="multiplier"
-                            defaultValue={String(this.state.priceMultiplier)}
-                            onBlur={event => this.changePriceMultiplier(event)}
-                        />
-                        <div>Price decrease</div>
-                        <input
-                            type="text"
-                            placeholder="decrease"
-                            value={this.state.priceDecrease}
-                            onChange={event => this.changePriceDecrease(event)}
+                            value={store.priceMultiplier}
+                            onChange={event =>
+                                store.setValue(
+                                    'priceMultiplier',
+                                    Number(event.target.value) || 0
+                                )
+                            }
                         />
                         <div>Max price</div>
                         <input
                             type="text"
                             placeholder="max price"
-                            value={this.state.maxPrice}
-                            onChange={event => this.changeMaxPrice(event)}
+                            value={store.maxPrice}
+                            onChange={event =>
+                                store.setValue(
+                                    'maxPrice',
+                                    Number(event.target.value) || 0
+                                )
+                            }
                         />
-                        <div>Fixed price</div>
                     </div>
                 </div>
-                <div style={{ paddingTop: `${this.state.headerHeight}px` }}>
-                    Total: {this.state.players.length}
-                    {this.state.players.map((player, index) => {
+                <div className="content">
+                    Total: {store.players.length}
+                    {store.players.length === 0 && (
+                        <div>No players loaded.</div>
+                    )}
+                    {store.players.map((player, index) => {
+                        const isActive = store.activePlayer === player;
+
                         return (
                             <div
                                 key={player.id}
                                 style={{
                                     background: `${
-                                        index === this.state.currentPlayerIndex
-                                            ? 'tomato'
-                                            : 'white'
+                                        isActive ? 'tomato' : 'white'
                                     }`,
                                     margin: '2px 0',
                                     padding: '2px 0'
@@ -477,50 +304,28 @@ export class App extends React.Component<{}, State> {
                                     {index + 1}
                                 </span>
                                 <input
+                                    disabled
                                     type="text"
-                                    defaultValue={player.name}
-                                    onBlur={event =>
-                                        this.changePlayerName(event, player)
-                                    }
+                                    value={player.name}
                                 />
                                 <input
-                                    type="text"
-                                    defaultValue={player.price}
                                     style={{ width: '80px' }}
-                                    onBlur={event =>
-                                        this.changePlayerPrice(event, player)
+                                    type="text"
+                                    value={player.price}
+                                    onChange={event =>
+                                        player.changePrice(event.target.value)
                                     }
                                 />
                                 <input
+                                    disabled
                                     type="text"
-                                    defaultValue={player.rating}
+                                    value={player.rating}
                                     style={{ width: '40px' }}
-                                    onBlur={event =>
-                                        this.changePlayerRating(event, player)
-                                    }
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        this.changeActiveIndex(index)
-                                    }
-                                >
-                                    Set active
-                                </button>
                                 <span
                                     style={{
                                         padding: '0 4px',
-                                        display: 'inline-block',
-                                        width: '25px'
-                                    }}
-                                >
-                                    {player.id}
-                                </span>
-                                <span
-                                    style={{
-                                        padding: '0 4px',
-                                        display: 'inline-block',
-                                        width: '25px'
+                                        display: 'inline-block'
                                     }}
                                 >
                                     {player.rating}
@@ -528,9 +333,6 @@ export class App extends React.Component<{}, State> {
                             </div>
                         );
                     })}
-                    {this.state.players.length === 0 && (
-                        <div>No players loaded.</div>
-                    )}
                 </div>
             </div>
         );

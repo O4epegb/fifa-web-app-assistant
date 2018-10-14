@@ -2,31 +2,18 @@ import * as request from 'request-promise-native';
 import * as cheerio from 'cheerio';
 import { range, flatten, uniqBy } from 'lodash';
 
-import { savePlayers } from './players';
-import { PlayerType } from './models';
-
 const formatters = {
     K: 1000,
     M: 1000000
 };
 
-const iconPageLimit = 4;
-
-function getUrl(page = 1, playerType: PlayerType) {
-    if (playerType === PlayerType.Icon) {
-        return `https://www.futbin.com/19/players?page=${page}&version=icons`;
-    } else {
-        // return `https://www.futbin.com/19/players?page=${page}&version=gold_rare&sort=pc_price`;
-        return `https://www.futbin.com/19/players?page=${page}&version=gold_rare&sort=xbox_price&order=desc`;
-    }
+function getUrl(page = 1) {
+    return `https://www.futbin.com/19/players?page=${page}&version=gold_rare&sort=xbox_price&order=desc`;
 }
 
-function getPromises(totalPages: number, playerType: PlayerType) {
-    return range(
-        1,
-        (playerType === PlayerType.Gold ? totalPages : iconPageLimit) + 1
-    ).map(i => {
-        return request(getUrl(i, playerType), {
+function getPromises(totalPages: number) {
+    return range(1, totalPages + 1).map(i => {
+        return request(getUrl(i), {
             headers: {
                 Cookie: 'platform=pc'
             }
@@ -35,8 +22,7 @@ function getPromises(totalPages: number, playerType: PlayerType) {
             const tr = $('#repTb tbody > tr');
             const players = tr.toArray().map(el => {
                 const row = $(el);
-                const url =
-                    'https://www.futbin.com' + encodeURI(row.attr('data-url'));
+                // const url = 'https://www.futbin.com' + encodeURI(row.attr('data-url'));
                 const splittedUrl = decodeURI(
                     row.find('.player_name_players_table').attr('href')
                 ).split('/');
@@ -44,19 +30,16 @@ function getPromises(totalPages: number, playerType: PlayerType) {
                 const name = row.find('.player_name_players_table').text();
                 const id = splittedUrl[splittedUrl.length - 2];
                 const rating = row.find('.rating').text();
-                const price =
-                    row
-                        .find('.pc_color')
-                        .text()
-                        .trim() || '0';
+                const price = row
+                    .find('.pc_color')
+                    .text()
+                    .trim();
 
                 return {
                     id,
                     name,
                     rating,
-                    price,
-                    url,
-                    type: playerType,
+                    price: price || '0',
                     number: 0
                 };
             });
@@ -66,8 +49,8 @@ function getPromises(totalPages: number, playerType: PlayerType) {
     });
 }
 
-export function reloadFutbinData(totalPages = 10, playerType: PlayerType) {
-    return Promise.all(getPromises(totalPages, playerType)).then(data => {
+export function reloadFutbinData(totalPages = 10) {
+    return Promise.all(getPromises(totalPages)).then(data => {
         const playerCount = {};
 
         const players = flatten(data).map(player => {
@@ -86,11 +69,13 @@ export function reloadFutbinData(totalPages = 10, playerType: PlayerType) {
             const formattedPrice = formatter
                 ? formatters[formatter[0]] * numericPrice
                 : numericPrice;
-            player.price = String(formattedPrice);
 
-            return player;
+            return {
+                ...player,
+                price: formattedPrice
+            };
         });
 
-        return savePlayers(uniqBy(players, p => p.id));
+        return uniqBy(players, p => p.id);
     });
 }
