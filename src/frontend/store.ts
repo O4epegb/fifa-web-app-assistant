@@ -51,6 +51,13 @@ const Store = types
                 });
             },
             get activePlayer() {
+                if (
+                    this.players.length === 0 ||
+                    self.currentPlayerIndex > this.players.length
+                ) {
+                    return null;
+                }
+
                 return this.players[self.currentPlayerIndex];
             },
             get activePlayerPrice() {

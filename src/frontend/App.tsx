@@ -106,13 +106,14 @@ export class App extends React.Component<{}, {}> {
         }
 
         const nextIndex = store.currentPlayerIndex + 1;
+        store.setValue(
+            'currentPlayerIndex',
+            nextIndex >= store.players.length ? 0 : nextIndex
+        );
 
         if (nextIndex >= store.players.length) {
-            store.setValue('currentPlayerIndex', 0);
             u.moveAndClick(inputs.increaseMinBid);
             await u.delay(microDelay);
-        } else {
-            store.setValue('currentPlayerIndex', nextIndex);
         }
 
         const currentPlayer = store.activePlayer;
@@ -187,7 +188,6 @@ export class App extends React.Component<{}, {}> {
     };
 
     startSearchAgain = () => {
-        // store.setValue('currentPlayerIndex', store.currentPlayerIndex + 1);
         this.searchHandler();
     };
 
@@ -195,13 +195,23 @@ export class App extends React.Component<{}, {}> {
         if (store.isAutoSearchActive) {
             return (
                 <div className="player-info">
-                    <h1 className="player-name">{store.activePlayer.name}</h1>
-                    <div className="player-price">
-                        {store.activePlayer.price.toLocaleString()}
-                    </div>
-                    <div className="player-price">
-                        {Number(store.activePlayerPrice).toLocaleString()}
-                    </div>
+                    {store.activePlayer ? (
+                        <React.Fragment>
+                            <h1 className="player-name">
+                                {store.activePlayer.name}
+                            </h1>
+                            <div className="player-price">
+                                {store.activePlayer.price.toLocaleString()}
+                            </div>
+                            <div className="player-price">
+                                {Number(
+                                    store.activePlayerPrice
+                                ).toLocaleString()}
+                            </div>
+                        </React.Fragment>
+                    ) : (
+                        <h1 className="player-name">No active player</h1>
+                    )}
                 </div>
             );
         }
