@@ -18,3 +18,8 @@ export const Player = types
             }
         };
     });
+
+export interface Coord {
+    x: number;
+    y: number;
+}

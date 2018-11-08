@@ -1,14 +1,14 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { ipcRenderer } from 'electron';
-import * as u from '../utils';
+import * as u from './utils';
 import { shortcutNames, microDelay } from '../constants';
-import { inputs } from '../inputPositions';
-import { Coord } from '../models';
+import { inputs } from './inputPositions';
+import { Coord } from './models';
 import { store } from './store';
 
 @observer
-export class App extends React.Component<{}, {}> {
+export class App extends React.Component {
     componentDidMount() {
         store.reloadPlayersFromDb();
 
@@ -49,9 +49,6 @@ export class App extends React.Component<{}, {}> {
 
     toggleAutoSearch = () => {
         store.setValue('isAutoSearchActive', !store.isAutoSearchActive);
-        u.notify(
-            `AutoSearch toggled to ${store.isAutoSearchActive.toString()}`
-        );
     };
 
     checkPlayerFound = () => {
@@ -100,10 +97,16 @@ export class App extends React.Component<{}, {}> {
     };
 
     searchHandler = async () => {
+        if (store.isSearchInProgress) {
+            return;
+        }
+
         if (store.players.length === 0) {
             u.log('No players in DB');
             return;
         }
+
+        store.setValue('isSearchInProgress', true);
 
         const nextIndex = store.currentPlayerIndex + 1;
         store.setValue(
@@ -126,7 +129,6 @@ export class App extends React.Component<{}, {}> {
         );
 
         try {
-            await u.delay(microDelay);
             u.moveAndClick(inputs.clearPlayerInput);
             await u.delay(microDelay);
             u.moveAndClick(inputs.playerInput);
@@ -142,9 +144,7 @@ export class App extends React.Component<{}, {}> {
             if (playerNotFoundIconColor === inputs.playerNotFoundIcon.color) {
                 if (store.isAutoSearchActive) {
                     setTimeout(() => {
-                        if (store.isAutoSearchActive) {
-                            this.startSearchAgain();
-                        }
+                        this.startSearchAgain();
                     }, 100);
                     throw Error(
                         `Player ${currentPlayer.name} not found in the list`
@@ -152,14 +152,18 @@ export class App extends React.Component<{}, {}> {
                 }
             }
             u.moveAndClick(this.getPlayerSearchItem(currentPlayer.number));
-            await u.delay(microDelay);
+            await u.waitForColor(
+                inputs.bidPriceButton.color,
+                inputs.bidPriceButton
+            );
             u.moveAndClick(inputs.clearPriceInput);
             u.moveAndClick(inputs.priceInput);
-            await u.delay(microDelay);
             u.typeString(priceString);
             u.moveAndClick(inputs.searchButton);
             const wasFound = await this.checkPlayerFound();
             if (wasFound) {
+                store.setValue('isSearchInProgress', false);
+
                 u.notify(
                     `FOUND! ${
                         currentPlayer.name
@@ -178,17 +182,20 @@ export class App extends React.Component<{}, {}> {
                     inputs.searchButton.color,
                     inputs.searchButton
                 );
-                if (store.isAutoSearchActive) {
-                    this.startSearchAgain();
-                }
+                this.startSearchAgain();
             }
         } catch (error) {
+            store.setValue('isSearchInProgress', false);
+
             console.log(`Something went wrong.`, error);
         }
     };
 
     startSearchAgain = () => {
-        this.searchHandler();
+        store.setValue('isSearchInProgress', false);
+        if (store.isAutoSearchActive) {
+            this.searchHandler();
+        }
     };
 
     render() {

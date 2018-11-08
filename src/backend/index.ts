@@ -1,11 +1,11 @@
 import { app, BrowserWindow } from 'electron';
+import { client } from 'electron-connect';
 import {
     registerShortcut,
     unregisterShortcut,
     unregisterAllShortcuts
-} from '../shortcut';
+} from './shortcut';
 import { shortcutNames } from '../constants';
-import { client } from 'electron-connect';
 
 // const isProduction = process.env.NODE_ENV === 'production';
 const useElectronConnect = process.env.ELECTRON_CONNECT === 'true';

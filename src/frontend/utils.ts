@@ -65,7 +65,7 @@ export function waitForColor(color: string, coord: Coord) {
             const colorAtCoord = getPixelColor(coord);
             if (colorAtCoord !== color) {
                 console.log(`Looking for color "${color}" at cursor position`);
-                setTimeout(checkColor, 300);
+                setTimeout(checkColor, 15);
             } else {
                 console.log(`Color "${color}" found`);
                 resolve();

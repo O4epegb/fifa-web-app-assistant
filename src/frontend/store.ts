@@ -10,6 +10,7 @@ const Store = types
         allPlayers: types.array(Player),
         totalPagesToLoad: types.number,
         isAutoSearchActive: types.boolean,
+        isSearchInProgress: types.boolean,
         maxPrice: types.number,
         priceFrom: types.number,
         priceTo: types.number,
@@ -26,7 +27,7 @@ const Store = types
             },
             reloadData() {
                 return reloadFutbinData(self.totalPagesToLoad).then(players => {
-                    console.log(`Reloaded ${players.length} players`);
+                    console.log(`Loaded ${players.length} players from futbin`);
                     this.addPlayers(players as Players);
                 });
             },
@@ -65,8 +66,7 @@ const Store = types
                 const priceWithDiscount =
                     (numericPrice * self.priceMultiplier) / 100;
                 const discount = numericPrice - priceWithDiscount;
-                const actualDiscount =
-                    discount < 1000 ? numericPrice / 2 : discount;
+                const actualDiscount = discount < 5000 ? 5000 : discount;
                 const price = numericPrice - actualDiscount;
                 return Math.min(self.maxPrice, price).toFixed(0);
             }
@@ -77,10 +77,11 @@ export const store = Store.create({
     allPlayers: [],
     totalPagesToLoad: 10,
     isAutoSearchActive: false,
+    isSearchInProgress: false,
     maxPrice: 200000,
     priceFrom: 50000,
     priceTo: 200000,
-    priceMultiplier: 85,
+    priceMultiplier: 90,
     currentPlayerIndex: 0
 });
 

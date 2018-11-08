@@ -7,6 +7,4 @@ export const shortcutNames = {
     six: 'CommandOrControl+Shift+Alt+Y'
 };
 
-export const playerIconBgColor = '2c313c';
-
 export const microDelay = 50;

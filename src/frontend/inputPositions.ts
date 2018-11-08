@@ -38,7 +38,7 @@ export const inputs = {
     searchButton: {
         x: 1516,
         y: 1199,
-        color: 'ee407b'
+        color: 'ee3f7b'
     },
     modifySearchButton: {
         x: 136,
@@ -48,7 +48,7 @@ export const inputs = {
     modifySearchIcon: {
         x: 1309,
         y: 789,
-        color: 'cccfdb'
+        color: 'cbcfdb'
     },
     clearPlayerInput: {
         x: 1721,
@@ -74,5 +74,15 @@ export const inputs = {
     increaseMinBid: {
         x: 1301,
         y: 1047
+    },
+    bidPriceButton: {
+        x: 1349,
+        y: 1060,
+        color: 'e1e3e8'
+    },
+    inputSearchIcon: {
+        x: 1732,
+        y: 503,
+        color: '898c94'
     }
 };
