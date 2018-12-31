@@ -1,43 +1,42 @@
 export const inputs = {
     playerInput: {
-        x: 1226,
-        y: 504
+        x: 1012,
+        y: 439
     },
     playerSearchItem1: {
-        x: 1028,
-        y: 606
+        x: 1121,
+        y: 531
     },
     playerSearchItem2: {
-        x: 1028,
-        y: 659,
-        color: 'cbfd5b'
+        x: 1132,
+        y: 595
     },
     playerSearchItem3: {
-        x: 1028,
-        y: 690,
-        color: 'cbfd5b'
+        x: 1128,
+        y: 643
     },
     playerNotFoundIcon: {
-        x: 1259,
-        y: 615,
+        x: 1268,
+        y: 535,
         color: '898c94'
     },
     searchPlayerCard: {
-        x: 1073,
-        y: 578,
-        color: 'f5f5f5'
+        x: 1015,
+        y: 483,
+        color: '8999bd'
     },
     priceInput: {
-        x: 1481,
-        y: 1147
+        x: 1614,
+        y: 862,
+        color: 'ffffff'
     },
     clearPriceInput: {
-        x: 1712,
-        y: 1106
+        x: 1733,
+        y: 841
     },
     searchButton: {
-        x: 1516,
-        y: 1199,
+        x: 1486,
+        y: 1251,
         color: 'ee3f7b'
     },
     modifySearchButton: {
@@ -46,26 +45,28 @@ export const inputs = {
         color: 'cccfdb'
     },
     modifySearchIcon: {
-        x: 1309,
-        y: 789,
+        x: 1307,
+        y: 774,
         color: 'cbcfdb'
     },
     clearPlayerInput: {
-        x: 1721,
-        y: 497
+        x: 1724,
+        y: 451
     },
     firstPlayerCard: {
         x: 891,
-        y: 433,
+        y: 381,
         color: '92fde0'
     },
     buyNowButton: {
-        x: 2233,
-        y: 848
+        x: 2160,
+        y: 821,
+        color: 'd8dce4'
     },
     buyNowButtonOk: {
-        x: 1341,
-        y: 830
+        x: 1342,
+        y: 824,
+        color: 'fbf5f7'
     },
     backButton: {
         x: 137,
@@ -73,11 +74,12 @@ export const inputs = {
     },
     increaseMinBid: {
         x: 1301,
-        y: 1047
+        y: 754,
+        color: '4485be'
     },
     bidPriceButton: {
-        x: 1349,
-        y: 1060,
+        x: 1356,
+        y: 763,
         color: 'e1e3e8'
     },
     inputSearchIcon: {

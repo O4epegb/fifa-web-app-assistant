@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { ipcRenderer } from 'electron';
+import { format } from 'date-fns';
 import * as u from './utils';
 import { shortcutNames, microDelay } from '../constants';
 import { inputs } from './inputPositions';
@@ -10,7 +11,7 @@ import { store } from './store';
 @observer
 export class App extends React.Component {
     componentDidMount() {
-        store.reloadPlayersFromDb();
+        store.loadPlayersFromDb();
 
         ipcRenderer.on('shortcut-press', (event, shortcutName) => {
             switch (shortcutName) {
@@ -39,7 +40,7 @@ export class App extends React.Component {
                     console.log(
                         `Coords: x: ${coords.x}, y: ${
                             coords.y
-                        }; Color: #${u.getPixelColor(coords)}`
+                        }, color: '${u.getPixelColor(coords)}'`
                     );
                     break;
                 }
@@ -64,6 +65,7 @@ export class App extends React.Component {
                 const firstPlayerCardColor = u.getPixelColor(
                     inputs.firstPlayerCard
                 );
+                console.log(inputs.firstPlayerCard.color, firstPlayerCardColor);
                 if (firstPlayerCardColor === inputs.firstPlayerCard.color) {
                     return resolve(true);
                 }
@@ -122,6 +124,8 @@ export class App extends React.Component {
         const currentPlayer = store.activePlayer;
         const priceString = store.activePlayerPrice;
 
+        currentPlayer.checkPriceGraph();
+
         console.log(
             `Checking player "${
                 currentPlayer.name
@@ -156,8 +160,9 @@ export class App extends React.Component {
                 inputs.bidPriceButton.color,
                 inputs.bidPriceButton
             );
-            u.moveAndClick(inputs.clearPriceInput);
+            // u.moveAndClick(inputs.clearPriceInput);
             u.moveAndClick(inputs.priceInput);
+            await u.delay(50);
             u.typeString(priceString);
             u.moveAndClick(inputs.searchButton);
             const wasFound = await this.checkPlayerFound();
@@ -207,13 +212,37 @@ export class App extends React.Component {
                             <h1 className="player-name">
                                 {store.activePlayer.name}
                             </h1>
-                            <div className="player-price">
-                                {store.activePlayer.price.toLocaleString()}
-                            </div>
-                            <div className="player-price">
-                                {Number(
-                                    store.activePlayerPrice
-                                ).toLocaleString()}
+                            <div className="player-price-info">
+                                <div className="player-graph">
+                                    {store.activePlayer.prices.map(price => {
+                                        return (
+                                            <div
+                                                key={price.date}
+                                                className="player-graph__item"
+                                            >
+                                                <div className="player-graph__item-date">
+                                                    {format(
+                                                        price.date,
+                                                        'DD.MM.YY'
+                                                    )}
+                                                </div>
+                                                <div className="player-graph__item-price">
+                                                    {price.price.toLocaleString()}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="player-prices">
+                                    <div className="player-price">
+                                        {store.activePlayer.price.toLocaleString()}
+                                    </div>
+                                    <div className="player-price">
+                                        {Number(
+                                            store.activePlayerPrice
+                                        ).toLocaleString()}
+                                    </div>
+                                </div>
                             </div>
                         </React.Fragment>
                     ) : (
@@ -293,6 +322,36 @@ export class App extends React.Component {
                     </div>
                 </div>
                 <div className="content">
+                    {store.detailedInfoPlayer && (
+                        <div className="detailed-info">
+                            <div>
+                                <button
+                                    onClick={() =>
+                                        store.toggleDetailedInfo(null)
+                                    }
+                                >
+                                    close
+                                </button>
+                            </div>
+                            <div className="player-graph">
+                                {store.detailedInfoPlayer.prices.map(price => {
+                                    return (
+                                        <div
+                                            key={price.date}
+                                            className="player-graph__item"
+                                        >
+                                            <div className="player-graph__item-date">
+                                                {format(price.date, 'DD.MM.YY')}
+                                            </div>
+                                            <div className="player-graph__item-price">
+                                                {price.price.toLocaleString()}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                     Total: {store.players.length}
                     {store.players.length === 0 && (
                         <div>No players loaded.</div>
@@ -326,27 +385,41 @@ export class App extends React.Component {
                                     value={player.name}
                                 />
                                 <input
+                                    disabled
                                     style={{ width: '80px' }}
                                     type="text"
                                     value={player.price}
-                                    onChange={event =>
-                                        player.changePrice(event.target.value)
-                                    }
                                 />
+                                <button
+                                    onClick={() =>
+                                        player.changePrice(player.price - 1000)
+                                    }
+                                >
+                                    -
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        player.changePrice(player.price + 1000)
+                                    }
+                                >
+                                    +
+                                </button>
                                 <input
                                     disabled
                                     type="text"
                                     value={player.rating}
                                     style={{ width: '40px' }}
                                 />
-                                <span
-                                    style={{
-                                        padding: '0 4px',
-                                        display: 'inline-block'
-                                    }}
+                                <button onClick={() => player.getPriceGraph()}>
+                                    get graph
+                                </button>
+                                <button
+                                    onClick={() =>
+                                        store.toggleDetailedInfo(player.id)
+                                    }
                                 >
-                                    {player.rating}
-                                </span>
+                                    show graph
+                                </button>
                             </div>
                         );
                     })}

@@ -1,13 +1,15 @@
 import { remote, screen } from 'electron';
-import { autorun } from 'mobx';
+import { autorun, values } from 'mobx';
 import { types, onSnapshot } from 'mobx-state-tree';
+import { merge, values as lodashValues } from 'lodash';
 import { Player, Players } from './models';
 import { getPlayers, savePlayers } from './db';
 import { reloadFutbinData } from './services';
 
 const Store = types
     .model({
-        allPlayers: types.array(Player),
+        allPlayers: types.map(Player),
+        detailedInfoPlayerId: types.maybeNull(types.string),
         totalPagesToLoad: types.number,
         isAutoSearchActive: types.boolean,
         isSearchInProgress: types.boolean,
@@ -31,7 +33,7 @@ const Store = types
                     this.addPlayers(players as Players);
                 });
             },
-            reloadPlayersFromDb() {
+            loadPlayersFromDb() {
                 return getPlayers().then(players => {
                     console.log(`${players.length} players reloaded from db`);
 
@@ -39,14 +41,28 @@ const Store = types
                 });
             },
             addPlayers(players: Players) {
-                self.allPlayers.replace(players);
+                players.forEach(playerRaw => {
+                    const player = self.allPlayers.get(playerRaw.id);
+
+                    if (player) {
+                        self.allPlayers.set(
+                            playerRaw.id,
+                            merge(player, playerRaw)
+                        );
+                    } else {
+                        self.allPlayers.set(playerRaw.id, playerRaw);
+                    }
+                });
+            },
+            toggleDetailedInfo(id: string | null) {
+                self.detailedInfoPlayerId = id;
             }
         };
     })
     .views(self => {
         return {
-            get players() {
-                return self.allPlayers.filter(player => {
+            get players(): Players {
+                return values(self.allPlayers).filter(player => {
                     const price = Number(player.price);
                     return price <= self.priceTo && price >= self.priceFrom;
                 });
@@ -61,6 +77,9 @@ const Store = types
 
                 return this.players[self.currentPlayerIndex];
             },
+            get detailedInfoPlayer() {
+                return self.allPlayers.get(self.detailedInfoPlayerId);
+            },
             get activePlayerPrice() {
                 const numericPrice = this.activePlayer.price;
                 const priceWithDiscount =
@@ -74,19 +93,19 @@ const Store = types
     });
 
 export const store = Store.create({
-    allPlayers: [],
+    allPlayers: {},
     totalPagesToLoad: 10,
     isAutoSearchActive: false,
     isSearchInProgress: false,
-    maxPrice: 200000,
+    maxPrice: 500000,
     priceFrom: 50000,
-    priceTo: 200000,
-    priceMultiplier: 90,
+    priceTo: 5000000,
+    priceMultiplier: 85,
     currentPlayerIndex: 0
 });
 
 onSnapshot(store.allPlayers, newSnapshot => {
-    savePlayers(newSnapshot).then(() => {
+    savePlayers(lodashValues(newSnapshot)).then(() => {
         console.log('Saved players on disk');
     });
 });

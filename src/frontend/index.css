@@ -28,7 +28,17 @@ body {
 }
 
 .content {
+    position: relative;
     overflow-y: auto;
+}
+
+.detailed-info {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1;
+    background-color: #fff;
 }
 
 .player-info {
@@ -45,7 +55,28 @@ body {
     white-space: nowrap;
 }
 
+.player-price-info {
+    display: flex;
+}
+
 .player-price {
     font-size: 24px;
     text-align: center;
+}
+
+.player-prices {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
+
+.player-graph {
+    flex: 1;
+    overflow: auto;
+}
+
+.player-graph__item {
+    display: flex;
+    justify-content: space-around;
 }

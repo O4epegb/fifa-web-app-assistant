@@ -15,7 +15,8 @@ export function getPlayers() {
                         return {
                             ...item,
                             price: Number(item.price),
-                            number: Number(item.number)
+                            number: Number(item.number),
+                            prices: JSON.parse(item.prices)
                         } as PlayerSnapshot;
                     })
                 );

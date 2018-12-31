@@ -30,6 +30,10 @@ function getPromises(totalPages: number) {
                 const name = row.find('.player_name_players_table').text();
                 const id = splittedUrl[splittedUrl.length - 2];
                 const rating = row.find('.rating').text();
+                const originalId = /\/(\d+)\.png/.exec(
+                    row.find('.player_img').attr('data-original')
+                )[1];
+
                 const price = row
                     .find('.pc_color')
                     .text()
@@ -37,6 +41,7 @@ function getPromises(totalPages: number) {
 
                 return {
                     id,
+                    originalId,
                     name,
                     rating,
                     price: price || '0',
@@ -78,4 +83,23 @@ export function reloadFutbinData(totalPages = 10) {
 
         return uniqBy(players, p => p.id);
     });
+}
+
+export function getPlayerPriceGraph(id: string) {
+    return request(
+        `https://www.futbin.com/19/playerGraph?type=daily_graph&year=19&player=${id}`
+    ).then((data: string) => {
+        return (JSON.parse(data) as PricesResponse).pc
+            .reverse()
+            .map(([date, price]) => {
+                return {
+                    date,
+                    price
+                };
+            });
+    });
+}
+
+interface PricesResponse {
+    pc: Array<Array<number>>;
 }
